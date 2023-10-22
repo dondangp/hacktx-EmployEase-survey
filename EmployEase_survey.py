@@ -1,15 +1,15 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import os
 import base64
 
-
 DATA_FILE = "stress_data.csv"
+
 def clear_data():
     if os.path.exists(DATA_FILE):
         os.remove(DATA_FILE)
+
 def save_data(date, total_stress, journal_entry):
     if os.path.exists(DATA_FILE):
         data = pd.read_csv(DATA_FILE)
@@ -42,7 +42,6 @@ def main():
 
     date = st.date_input("Select the date for check-in", pd.Timestamp.today() - pd.Timedelta(days=17))
 
-    # Check if date has changed and reset
     if "prev_date" not in st.session_state:
         st.session_state.prev_date = date
     elif st.session_state.prev_date != date:
@@ -53,45 +52,43 @@ def main():
         data = load_data()
         if not data.empty:
             st.subheader("Your Stress Level History")
-            fig, ax = plt.subplots()
-            ax.plot(data["Date"], data["Stress Level"], marker='o', linestyle='-', color='black')
             
-            # Labels and styling
+            # Convert the "Date" column to a list of date objects
+            dates = pd.to_datetime(data["Date"]).tolist()
+            stress_levels = data["Stress Level"].tolist()
+
+            fig, ax = plt.subplots(figsize=(10,6))
+            ax.plot(dates, stress_levels, marker='o', linestyle='-', color='black')
+            
             ax.set_facecolor('white')
             ax.grid(color='black', linestyle='-', linewidth=0.5)
-            ax.set_xlabel('Date', color='white')
-            ax.set_ylabel('Stress Level', color='white')
-            ax.set_xticklabels(data["Date"], rotation=45, ha="right", color='black')
+            ax.set_xlabel('Date')
+            ax.set_ylabel('Stress Level')
             ax.tick_params(axis='both', colors='black')
-            ax.set_title('Your Stress Levels Over Time', color='black')
+            ax.set_title('Your Stress Levels Over Time')
+            fig.autofmt_xdate()  # Auto format the x-axis labels for better readability
             
             st.pyplot(fig)
 
-            # Save the figure to PDF and provide a download link
             pdf_filename = "stress_level_history.pdf"
             fig.savefig(pdf_filename, bbox_inches='tight')
             st.markdown(create_download_link_for_binary(pdf_filename, pdf_filename), unsafe_allow_html=True)
 
-            # Display journal entries
             for _, row in data.iterrows():
-                if pd.notna(row["Journal"]):  # Skip NaN values
+                if pd.notna(row["Journal"]):
                     st.subheader(f"Journal Entry for {row['Date']}:")
                     st.write(row["Journal"])
         else:
             st.write("No history found.")
     else:
-        # Questions
         questions = [
-            "Do you often feel overwhelmed?",
+            "Do you often feel overwhelmed at your Construction shift?",
             "Do you struggle to sleep because of stress?",
             "Do you find it hard to concentrate?",
-            "Do you feel constantly tired?",
+            "Do you feel constantly tired during your shift?",
             "Do you get headaches or migraines often?"
         ]
-
         default_values = [5] * len(questions)
-
-        # Collect answers
         answers = []
         for q, default in zip(questions, default_values):
             ans = st.slider(q, 0, 10, int(default))
@@ -100,13 +97,15 @@ def main():
         total_stress = sum(answers)
         st.subheader(f"Your Stress Level for {date}: {total_stress} / {len(questions) * 10}")
 
-        # Journal entry
         journal_entry = st.text_area("Journal Entry", "")
 
-        # Save data
         if st.button("Save"):
             save_data(date, total_stress, journal_entry)
             st.success("Saved successfully!")
 
 if __name__ == "__main__":
     main()
+
+
+
+
