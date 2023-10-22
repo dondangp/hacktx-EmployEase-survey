@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import base64
 
+
 DATA_FILE = "stress_data.csv"
 def clear_data():
     if os.path.exists(DATA_FILE):
@@ -31,7 +32,8 @@ def create_download_link_for_binary(filename, download_name):
     return f'<a href="data:application/octet-stream;base64,{b64}" download="{download_name}">Download PDF</a>'
 
 def main():
-    st.title("Daily Stress Level Check-in")
+    st.image("EmployEase-01.png", use_column_width=True)
+    st.title("Daily Stress Level Measurement")
     if "initialized" not in st.session_state:
         clear_data()
         st.session_state.initialized = True
